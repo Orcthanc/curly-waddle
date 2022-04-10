@@ -1,30 +1,20 @@
-use bevy::{prelude::*, ecs::system::QuerySingleError};
+use bevy::prelude::*;
 
-#[derive(Component)]
-struct Player {
-    speed: f32,
-}
+mod player;
 
-struct TeleportClass {
-    distance: f32,
-}
-
-#[derive(Component)]
-enum Classes {
-    Teleport(TeleportClass),
-}
+use player::player::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
-        .add_startup_system(setup)
+        .add_startup_system(setup_default_scene)
         .add_system(movement_input_system)
         .add_system(ability_system)
         .run();
 }
 
-fn setup(
+fn setup_default_scene(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -67,70 +57,4 @@ fn setup(
         transform: Transform::from_matrix(Mat4::face_toward(Vec3::new(-100.0, 100.0, 200.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0))),
         ..Default::default()
     });
-
-
-}
-
-fn ability_system(
-    key_input: Res<Input<KeyCode>>,
-    mut class_q: Query<(&Classes, &mut Transform)>,
-){
-    let (class, mut transform) = match class_q.get_single_mut(){
-        Ok((class, transform)) => (class, transform),
-        Err(v) => {
-            match v{
-                QuerySingleError::NoEntities(_) => return,
-                QuerySingleError::MultipleEntities(_) => panic!("Found multiple entities with abilities"),
-            }
-        }
-    };
-
-    if key_input.pressed(KeyCode::LShift){
-        match class {
-            Classes::Teleport(teleport_class) => {
-                if key_input.just_pressed(KeyCode::LShift) {
-                    let mut dir = Vec2::new(0.0, 0.0);
-                    if key_input.pressed(KeyCode::Left){
-                        dir.x -= 1.0;
-                    }
-                    if key_input.pressed(KeyCode::Right){
-                        dir.x += 1.0;
-                    }
-                    if key_input.pressed(KeyCode::Down){
-                        dir.y -= 1.0;
-                    }
-                    if key_input.pressed(KeyCode::Up){
-                        dir.y += 1.0;
-                    }
-
-                    dir = dir.normalize_or_zero() * teleport_class.distance;
-                    transform.translation.x += dir.x;
-                    transform.translation.y += dir.y;
-                }
-            },
-        }
-    }
-}
-
-fn movement_input_system(
-    time: Res<Time>,
-    key_input: Res<Input<KeyCode>>,
-    mut player_q: Query<(&Player, &mut Transform)>,
-){
-    let (player, mut transform) = player_q.single_mut();
-
-    let dist = player.speed * time.delta_seconds();
-
-    if key_input.pressed(KeyCode::Left){
-        transform.translation.x -= dist;
-    }
-    if key_input.pressed(KeyCode::Right){
-        transform.translation.x += dist;
-    }
-    if key_input.pressed(KeyCode::Down){
-        transform.translation.y -= dist;
-    }
-    if key_input.pressed(KeyCode::Up){
-        transform.translation.y += dist;
-    }
 }
