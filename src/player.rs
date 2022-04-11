@@ -10,13 +10,24 @@ pub mod player{
         pub distance: f32,
     }
 
+    pub struct SprintClass {
+        pub sprint_multiplier: f32,
+    }
+
     #[derive(Component)]
     pub enum Classes {
         Teleport(TeleportClass),
+        Sprint(SprintClass),
+    }
+
+
+    #[derive(Component)]
+    pub struct FollowCam {
     }
 
     pub fn ability_system(
         key_input: Res<Input<KeyCode>>,
+        time: Res<Time>,
         mut class_q: Query<(&Classes, &mut Transform)>,
     ){
         let (class, mut transform) = match class_q.get_single_mut(){
@@ -34,16 +45,16 @@ pub mod player{
                 Classes::Teleport(teleport_class) => {
                     if key_input.just_pressed(KeyCode::LShift) {
                         let mut dir = Vec2::new(0.0, 0.0);
-                        if key_input.pressed(KeyCode::Left){
+                        if key_input.pressed(KeyCode::A){
                             dir.x -= 1.0;
                         }
-                        if key_input.pressed(KeyCode::Right){
+                        if key_input.pressed(KeyCode::D){
                             dir.x += 1.0;
                         }
-                        if key_input.pressed(KeyCode::Down){
+                        if key_input.pressed(KeyCode::S){
                             dir.y -= 1.0;
                         }
-                        if key_input.pressed(KeyCode::Up){
+                        if key_input.pressed(KeyCode::W){
                             dir.y += 1.0;
                         }
 
@@ -52,6 +63,23 @@ pub mod player{
                         transform.translation.y += dir.y;
                     }
                 },
+                Classes::Sprint(sprint_class) => {
+                    //TODO improve
+                    let dist = sprint_class.sprint_multiplier * time.delta_seconds();
+
+                    if key_input.pressed(KeyCode::A){
+                        transform.translation.x -= dist;
+                    }
+                    if key_input.pressed(KeyCode::D){
+                        transform.translation.x += dist;
+                    }
+                    if key_input.pressed(KeyCode::S){
+                        transform.translation.y -= dist;
+                    }
+                    if key_input.pressed(KeyCode::W){
+                        transform.translation.y += dist;
+                    }
+                }
             }
         }
     }
@@ -65,17 +93,30 @@ pub mod player{
 
         let dist = player.speed * time.delta_seconds();
 
-        if key_input.pressed(KeyCode::Left){
+        if key_input.pressed(KeyCode::A){
             transform.translation.x -= dist;
         }
-        if key_input.pressed(KeyCode::Right){
+        if key_input.pressed(KeyCode::D){
             transform.translation.x += dist;
         }
-        if key_input.pressed(KeyCode::Down){
+        if key_input.pressed(KeyCode::S){
             transform.translation.y -= dist;
         }
-        if key_input.pressed(KeyCode::Up){
+        if key_input.pressed(KeyCode::W){
             transform.translation.y += dist;
         }
+    }
+
+    pub fn follow_cam_system(
+        player_q: Query<(&Player, &Transform)>,
+        mut cam_q: Query<(&FollowCam, &mut Transform), Without<Player>>,
+    ){
+
+        let (_, p_trans) = player_q.single();
+        let (_, mut c_trans) = cam_q.single_mut();
+
+        info!("{:?}", c_trans);
+        c_trans.translation.x = p_trans.translation.x;
+        c_trans.translation.y = p_trans.translation.y;
     }
 }

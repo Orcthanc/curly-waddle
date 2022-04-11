@@ -11,6 +11,7 @@ fn main() {
         .add_startup_system(setup_default_scene)
         .add_system(movement_input_system)
         .add_system(ability_system)
+        .add_system(follow_cam_system)
         .run();
 }
 
@@ -29,11 +30,13 @@ fn setup_default_scene(
     info!("{:?}", cam.perspective_projection);
 
     commands.spawn_bundle(cam);
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(UiCameraBundle::default())
+        .insert(FollowCam{});
  
+    //Player
     let sphere = meshes.add(Mesh::from(shape::Icosphere{ subdivisions: 4, radius: 1.0 }));
     let player_mat = materials.add(StandardMaterial {
-        base_color: Color::rgb(0.9, 0.9, 0.9),
+        base_color: Color::rgb(0.7, 0.7, 0.7),
         ..Default::default()
     });
 
@@ -45,7 +48,36 @@ fn setup_default_scene(
     })
     .insert(Player{ speed: 20.0 })
     .insert(Classes::Teleport(TeleportClass{ distance: 10.0 }));
+    //.insert(Classes::Sprint(SprintClass{ sprint_multiplier: 20.0 }));
  
+    //Ground
+    let square = meshes.add(Mesh::from(shape::Plane{ size: 1.0 }));
+    let white_mat = materials.add( StandardMaterial{ 
+        base_color: Color::rgb(1.0, 1.0, 1.0),
+        ..Default::default()
+    });
+
+    let black_mat = materials.add( StandardMaterial{ 
+        base_color: Color::rgb(0.0, 0.0, 0.0),
+        ..Default::default()
+    });
+
+    let size = 32.0;
+
+    for y in -10..10 {
+        for x in -10..10 {
+            commands.spawn_bundle(PbrBundle {
+                mesh: square.to_owned(),
+                material: if ((x + y) as i32).abs() % 2 == 1 { white_mat.to_owned() } else { black_mat.to_owned() },
+                transform: Transform {
+                    translation: Vec3::new(x as f32 * size, y as f32 * size, 0.0),
+                    rotation: Quat::from_rotation_x(std::f32::consts::FRAC_PI_2),
+                    scale: Vec3::new(size, size, size )},
+                ..Default::default()
+            });
+        }
+    }
+
 
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight { 
