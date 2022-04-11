@@ -53,15 +53,17 @@ fn setup_default_scene(
     let square = meshes.add(Mesh::from(shape::Plane{ size: 1.0 }));
     let white_mat = materials.add( StandardMaterial{ 
         base_color: Color::rgb(1.0, 1.0, 1.0),
+        reflectance: 0.1,
         ..Default::default()
     });
 
     let black_mat = materials.add( StandardMaterial{ 
         base_color: Color::rgb(0.0, 0.0, 0.0),
+        reflectance: 0.1,
         ..Default::default()
     });
 
-    let size = 32.0;
+    let size = 24.0;
 
     for y in -10..10 {
         for x in -10..10 {
@@ -81,7 +83,7 @@ fn setup_default_scene(
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight { 
             color: Color::rgb(1.0, 1.0, 1.0),
-            illuminance: 1000.0,
+            illuminance: 10000.0,
             shadows_enabled: true,
             ..Default::default()
         },

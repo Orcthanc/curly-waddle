@@ -10,19 +10,21 @@ pub mod player{
         pub distance: f32,
     }
 
+    /*
     pub struct SprintClass {
         pub sprint_multiplier: f32,
     }
+    */
 
     #[derive(Component)]
     pub enum Classes {
         Teleport(TeleportClass),
-        Sprint(SprintClass),
+        //Sprint(SprintClass),
     }
 
     pub fn ability_system(
         key_input: Res<Input<KeyCode>>,
-        time: Res<Time>,
+        //time: Res<Time>,
         mut class_q: Query<(&Classes, &mut Transform)>,
     ){
         let (class, mut transform) = match class_q.get_single_mut(){
@@ -58,6 +60,7 @@ pub mod player{
                         transform.translation.y += dir.y;
                     }
                 },
+                /*
                 Classes::Sprint(sprint_class) => {
                     //TODO improve
                     let dist = sprint_class.sprint_multiplier * time.delta_seconds();
@@ -75,6 +78,7 @@ pub mod player{
                         transform.translation.y += dist;
                     }
                 }
+                */
             }
         }
     }
@@ -87,19 +91,25 @@ pub mod player{
         let (player, mut transform) = player_q.single_mut();
 
         let dist = player.speed * time.delta_seconds();
+        let mut dir = Vec2::new(0.0, 0.0);
 
         if key_input.pressed(KeyCode::A){
-            transform.translation.x -= dist;
+            dir.x -= 1.0;
         }
         if key_input.pressed(KeyCode::D){
-            transform.translation.x += dist;
+            dir.x += 1.0;
         }
         if key_input.pressed(KeyCode::S){
-            transform.translation.y -= dist;
+            dir.y -= 1.0;
         }
         if key_input.pressed(KeyCode::W){
-            transform.translation.y += dist;
+            dir.y += 1.0;
         }
+
+        dir = dir.normalize_or_zero() * dist;
+
+        transform.translation.x += dir.x;
+        transform.translation.y += dir.y;
     }
 
     pub fn follow_cam_system(
