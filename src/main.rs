@@ -30,8 +30,7 @@ fn setup_default_scene(
     info!("{:?}", cam.perspective_projection);
 
     commands.spawn_bundle(cam);
-    commands.spawn_bundle(UiCameraBundle::default())
-        .insert(FollowCam{});
+    commands.spawn_bundle(UiCameraBundle::default());
  
     //Player
     let sphere = meshes.add(Mesh::from(shape::Icosphere{ subdivisions: 4, radius: 1.0 }));

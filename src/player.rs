@@ -1,5 +1,5 @@
 pub mod player{
-    use bevy::{prelude::*, ecs::system::QuerySingleError};
+    use bevy::{prelude::*, ecs::system::QuerySingleError, render::camera::CameraPlugin};
 
     #[derive(Component)]
     pub struct Player {
@@ -18,11 +18,6 @@ pub mod player{
     pub enum Classes {
         Teleport(TeleportClass),
         Sprint(SprintClass),
-    }
-
-
-    #[derive(Component)]
-    pub struct FollowCam {
     }
 
     pub fn ability_system(
@@ -109,14 +104,16 @@ pub mod player{
 
     pub fn follow_cam_system(
         player_q: Query<(&Player, &Transform)>,
-        mut cam_q: Query<(&FollowCam, &mut Transform), Without<Player>>,
+        mut cam_q: Query<(&Camera, &mut Transform), Without<Player>>,
     ){
 
         let (_, p_trans) = player_q.single();
-        let (_, mut c_trans) = cam_q.single_mut();
 
-        info!("{:?}", c_trans);
-        c_trans.translation.x = p_trans.translation.x;
-        c_trans.translation.y = p_trans.translation.y;
+        for (camera, mut c_trans) in cam_q.iter_mut(){
+            if camera.name == Some(CameraPlugin::CAMERA_3D.to_string()){
+                c_trans.translation.x = p_trans.translation.x;
+                c_trans.translation.y = p_trans.translation.y;
+            }
+        }
     }
 }
