@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 mod player;
+mod basic_shapes;
 
 use player::player::*;
 
@@ -88,6 +89,52 @@ fn setup_default_scene(
             ..Default::default()
         },
         transform: Transform::from_matrix(Mat4::face_toward(Vec3::new(-100.0, 100.0, 200.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0))),
+        ..Default::default()
+    });
+
+
+    //Testing stuff
+    let circle = meshes.add(basic_shapes::default_circle(64, 1.0));
+    let diamond = meshes.add(basic_shapes::default_ring(4, 0.4, 1.0));
+    let ring = meshes.add(basic_shapes::default_ring(64, 0.7, 1.0));
+
+    let hit_zone_mat = materials.add(StandardMaterial { 
+        base_color: Color::rgba(1.0, 0.0, 0.0, 0.8),
+        reflectance: 0.1,
+        ..Default::default()
+    });
+
+    commands.spawn_bundle(PbrBundle {
+        mesh: circle,
+        material: hit_zone_mat.to_owned(),
+        transform: Transform {
+            translation: Vec3::new(-40.0, 0.0, 0.01),
+            rotation: Quat::from_rotation_x(0.0),
+            scale: Vec3::new(10.0, 10.0, 10.0),
+        },
+        ..Default::default()
+    });
+ 
+    commands.spawn_bundle(PbrBundle {
+        mesh: diamond,
+        material: hit_zone_mat.to_owned(),
+        transform: Transform {
+            translation: Vec3::new(40.0, 0.0, 0.01),
+            rotation: Quat::default(),
+            scale: Vec3::new(15.0, 15.0, 15.0),
+        },
+        ..Default::default()
+    });
+
+
+    commands.spawn_bundle(PbrBundle {
+        mesh: ring,
+        material: hit_zone_mat.to_owned(),
+        transform: Transform {
+            translation: Vec3::new(0.0, 0.0, 0.01),
+            rotation: Quat::default(),
+            scale: Vec3::new(20.0, 20.0, 20.0),
+        },
         ..Default::default()
     });
 }
