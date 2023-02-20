@@ -69,6 +69,5 @@ pub fn default_ring(segments: i32, inner_radius: f32, outer_radius: f32) -> Mesh
     //TODO
     mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; (segments * 2) as usize]);
 
-
     mesh
 }

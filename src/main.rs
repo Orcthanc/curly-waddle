@@ -4,6 +4,8 @@ mod player;
 mod basic_shapes;
 
 use player::player::*;
+use bevy::ecs::system::QuerySingleError;
+use rand::prelude::*;
 
 fn main() {
     App::new()
@@ -13,7 +15,37 @@ fn main() {
         .add_system(movement_input_system)
         .add_system(ability_system)
         .add_system(follow_cam_system)
+        .add_system(check_orb)
         .run();
+}
+
+#[derive(Component)]
+struct Orb {
+}
+
+fn check_orb(
+    mut orb_q: Query<(&Orb, &mut Transform), Without<Player>>,
+    mut player_q: Query<(&Transform, &mut Player), Without<Orb>>,
+) {
+    let (_, mut transform) = match orb_q.get_single_mut(){
+        Ok((orb, transform)) => (orb, transform),
+        Err(v) => {
+            match v{
+                QuerySingleError::NoEntities(_) => panic!("No orb found"),
+                QuerySingleError::MultipleEntities(_) => panic!("Found multiple orbs"),
+            }
+        }
+    };
+
+    let (p_trans, mut player) = player_q.single_mut();
+
+    //println!("{:?}", p_trans.translation.distance(transform.translation));
+
+    if p_trans.translation.distance(transform.translation) < 3.0 {
+        let angle: f32 = rand::thread_rng().gen::<f32>() * std::f32::consts::PI * 2.0;
+        transform.translation += Vec3::new(30.0 * angle.cos(), 30.0 * angle.sin(), 0.0);
+        player.invert = !player.invert;
+    }
 }
 
 fn setup_default_scene(
@@ -46,7 +78,7 @@ fn setup_default_scene(
         transform: Transform::from_xyz( 0.0, 0.0, 0.0 ),
         ..Default::default()
     })
-    .insert(Player{ speed: 20.0 })
+    .insert(Player{ speed: 20.0, invert: true })
     .insert(Classes::Teleport(TeleportClass{ distance: 10.0 }));
     //.insert(Classes::Sprint(SprintClass{ sprint_multiplier: 20.0 }));
  
@@ -95,8 +127,6 @@ fn setup_default_scene(
 
     //Testing stuff
     let circle = meshes.add(basic_shapes::default_circle(64, 1.0));
-    let diamond = meshes.add(basic_shapes::default_ring(4, 0.4, 1.0));
-    let ring = meshes.add(basic_shapes::default_ring(64, 0.7, 1.0));
 
     let hit_zone_mat = materials.add(StandardMaterial { 
         base_color: Color::rgba(1.0, 0.0, 0.0, 0.8),
@@ -110,31 +140,9 @@ fn setup_default_scene(
         transform: Transform {
             translation: Vec3::new(-40.0, 0.0, 0.01),
             rotation: Quat::from_rotation_x(0.0),
-            scale: Vec3::new(10.0, 10.0, 10.0),
+            scale: Vec3::new(3.0, 3.0, 3.0),
         },
         ..Default::default()
-    });
- 
-    commands.spawn_bundle(PbrBundle {
-        mesh: diamond,
-        material: hit_zone_mat.to_owned(),
-        transform: Transform {
-            translation: Vec3::new(40.0, 0.0, 0.01),
-            rotation: Quat::default(),
-            scale: Vec3::new(15.0, 15.0, 15.0),
-        },
-        ..Default::default()
-    });
-
-
-    commands.spawn_bundle(PbrBundle {
-        mesh: ring,
-        material: hit_zone_mat.to_owned(),
-        transform: Transform {
-            translation: Vec3::new(0.0, 0.0, 0.01),
-            rotation: Quat::default(),
-            scale: Vec3::new(20.0, 20.0, 20.0),
-        },
-        ..Default::default()
-    });
+    })
+    .insert(Orb{});
 }

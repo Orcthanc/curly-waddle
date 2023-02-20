@@ -4,17 +4,12 @@ pub mod player{
     #[derive(Component)]
     pub struct Player {
         pub speed: f32,
+        pub invert: bool,
     }
 
     pub struct TeleportClass {
         pub distance: f32,
     }
-
-    /*
-    pub struct SprintClass {
-        pub sprint_multiplier: f32,
-    }
-    */
 
     #[derive(Component)]
     pub enum Classes {
@@ -85,28 +80,28 @@ pub mod player{
 
     pub fn movement_input_system(
         time: Res<Time>,
-        key_input: Res<Input<KeyCode>>,
+        mouse_input: Res<Input<MouseButton>>,
+        windows: Res<Windows>,
         mut player_q: Query<(&Player, &mut Transform)>,
     ){
         let (player, mut transform) = player_q.single_mut();
 
         let dist = player.speed * time.delta_seconds();
+        let window = windows.get_primary().unwrap();
+
         let mut dir = Vec2::new(0.0, 0.0);
 
-        if key_input.pressed(KeyCode::A){
-            dir.x -= 1.0;
-        }
-        if key_input.pressed(KeyCode::D){
-            dir.x += 1.0;
-        }
-        if key_input.pressed(KeyCode::S){
-            dir.y -= 1.0;
-        }
-        if key_input.pressed(KeyCode::W){
-            dir.y += 1.0;
+        if mouse_input.pressed(MouseButton::Right) {
+            if let Some(pos) = window.cursor_position() {
+                dir = pos - Vec2::new(window.width(), window.height()) / 2.0;
+            }
         }
 
         dir = dir.normalize_or_zero() * dist;
+
+        if player.invert {
+            dir *= -1.0;
+        }
 
         transform.translation.x += dir.x;
         transform.translation.y += dir.y;
