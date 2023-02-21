@@ -4,7 +4,7 @@ mod player;
 mod basic_shapes;
 
 use player::player::*;
-use bevy::ecs::system::QuerySingleError;
+use bevy::ecs::query::QuerySingleError;
 use rand::prelude::*;
 
 fn main() {
@@ -20,8 +20,7 @@ fn main() {
 }
 
 #[derive(Component)]
-struct Orb {
-}
+struct Orb {}
 
 fn check_orb(
     mut orb_q: Query<(&Orb, &mut Transform), Without<Player>>,
@@ -39,8 +38,6 @@ fn check_orb(
 
     let (p_trans, mut player) = player_q.single_mut();
 
-    //println!("{:?}", p_trans.translation.distance(transform.translation));
-
     if p_trans.translation.distance(transform.translation) < 3.0 {
         let angle: f32 = rand::thread_rng().gen::<f32>() * std::f32::consts::PI * 2.0;
         transform.translation += Vec3::new(30.0 * angle.cos(), 30.0 * angle.sin(), 0.0);
@@ -53,17 +50,14 @@ fn setup_default_scene(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ){
-    let mut cam = PerspectiveCameraBundle::new_3d();
+    let mut cam = Camera3dBundle::default();
 
     //TODO make diagonal
     cam.transform.translation = Vec3::new( 0.0, 0.0, 80.0 );
     //TODO change up to 0 0 1
     cam.transform.look_at(Vec3::new( 0.0, 0.0, 0.0 ), Vec3::new( 0.0, 1.0, 0.0 ));
 
-    info!("{:?}", cam.perspective_projection);
-
-    commands.spawn_bundle(cam);
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn(cam);
  
     //Player
     let sphere = meshes.add(Mesh::from(shape::Icosphere{ subdivisions: 4, radius: 1.0 }));
@@ -72,7 +66,7 @@ fn setup_default_scene(
         ..Default::default()
     });
 
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: sphere,
         material: player_mat,
         transform: Transform::from_xyz( 0.0, 0.0, 0.0 ),
@@ -100,7 +94,7 @@ fn setup_default_scene(
 
     for y in -10..10 {
         for x in -10..10 {
-            commands.spawn_bundle(PbrBundle {
+            commands.spawn(PbrBundle {
                 mesh: square.to_owned(),
                 material: if ((x + y) as i32).abs() % 2 == 1 { white_mat.to_owned() } else { black_mat.to_owned() },
                 transform: Transform {
@@ -113,14 +107,14 @@ fn setup_default_scene(
     }
 
 
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight { 
             color: Color::rgb(1.0, 1.0, 1.0),
             illuminance: 10000.0,
             shadows_enabled: true,
             ..Default::default()
         },
-        transform: Transform::from_matrix(Mat4::face_toward(Vec3::new(-100.0, 100.0, 200.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0))),
+        transform: Transform::from_matrix(Mat4::look_at_rh(Vec3::new(-100.0, 100.0, 200.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0))),
         ..Default::default()
     });
 
@@ -134,7 +128,7 @@ fn setup_default_scene(
         ..Default::default()
     });
 
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: circle,
         material: hit_zone_mat.to_owned(),
         transform: Transform {

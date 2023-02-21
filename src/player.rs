@@ -1,5 +1,5 @@
 pub mod player{
-    use bevy::{prelude::*, ecs::system::QuerySingleError, render::camera::CameraPlugin};
+    use bevy::{prelude::*, ecs::query::QuerySingleError};
 
     #[derive(Component)]
     pub struct Player {
@@ -14,16 +14,16 @@ pub mod player{
     #[derive(Component)]
     pub enum Classes {
         Teleport(TeleportClass),
-        //Sprint(SprintClass),
     }
 
     pub fn ability_system(
         key_input: Res<Input<KeyCode>>,
         //time: Res<Time>,
-        mut class_q: Query<(&Classes, &mut Transform)>,
+        mut class_q: Query<(&Classes, &Player, &mut Transform)>,
+        windows: Res<Windows>,
     ){
-        let (class, mut transform) = match class_q.get_single_mut(){
-            Ok((class, transform)) => (class, transform),
+        let (class, player, mut transform) = match class_q.get_single_mut(){
+            Ok((class, player, transform)) => (class, player, transform),
             Err(v) => {
                 match v{
                     QuerySingleError::NoEntities(_) => return,
@@ -32,48 +32,26 @@ pub mod player{
             }
         };
 
-        if key_input.pressed(KeyCode::LShift){
+        if key_input.just_pressed(KeyCode::Space){
             match class {
                 Classes::Teleport(teleport_class) => {
-                    if key_input.just_pressed(KeyCode::LShift) {
-                        let mut dir = Vec2::new(0.0, 0.0);
-                        if key_input.pressed(KeyCode::A){
-                            dir.x -= 1.0;
-                        }
-                        if key_input.pressed(KeyCode::D){
-                            dir.x += 1.0;
-                        }
-                        if key_input.pressed(KeyCode::S){
-                            dir.y -= 1.0;
-                        }
-                        if key_input.pressed(KeyCode::W){
-                            dir.y += 1.0;
-                        }
+                    let mut dir = Vec2::new(0.0, 0.0);
 
-                        dir = dir.normalize_or_zero() * teleport_class.distance;
-                        transform.translation.x += dir.x;
-                        transform.translation.y += dir.y;
+                    let window = windows.get_primary().unwrap();
+
+                    if let Some(pos) = window.cursor_position() {
+                        dir = pos - Vec2::new(window.width(), window.height()) / 2.0;
                     }
+
+                    dir = dir.normalize_or_zero() * teleport_class.distance;
+
+                    if player.invert {
+                        dir *= -1.0;
+                    }
+
+                    transform.translation.x += dir.x;
+                    transform.translation.y += dir.y;
                 },
-                /*
-                Classes::Sprint(sprint_class) => {
-                    //TODO improve
-                    let dist = sprint_class.sprint_multiplier * time.delta_seconds();
-
-                    if key_input.pressed(KeyCode::A){
-                        transform.translation.x -= dist;
-                    }
-                    if key_input.pressed(KeyCode::D){
-                        transform.translation.x += dist;
-                    }
-                    if key_input.pressed(KeyCode::S){
-                        transform.translation.y -= dist;
-                    }
-                    if key_input.pressed(KeyCode::W){
-                        transform.translation.y += dist;
-                    }
-                }
-                */
             }
         }
     }
@@ -114,11 +92,9 @@ pub mod player{
 
         let (_, p_trans) = player_q.single();
 
-        for (camera, mut c_trans) in cam_q.iter_mut(){
-            if camera.name == Some(CameraPlugin::CAMERA_3D.to_string()){
-                c_trans.translation.x = p_trans.translation.x;
-                c_trans.translation.y = p_trans.translation.y;
-            }
+        for (_, mut c_trans) in cam_q.iter_mut(){
+            c_trans.translation.x = p_trans.translation.x;
+            c_trans.translation.y = p_trans.translation.y;
         }
     }
 }

@@ -20,18 +20,18 @@ pub fn default_circle(vertices: i32, radius: f32) -> Mesh {
     }
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.set_attribute(Mesh::ATTRIBUTE_POSITION,
-        dbg!(circle.iter()
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION,
+        circle.iter()
         .map(|e| [e.x, e.y, e.z])
-        .collect::<Vec<[f32; 3]>>()));
+        .collect::<Vec<[f32; 3]>>());
 
-    mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; (vertices + 1) as usize]);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; (vertices + 1) as usize]);
     //TODO
-    mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; (vertices + 1) as usize]);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; (vertices + 1) as usize]);
 
-    let indices = Some(Indices::U32(dbg!((1..(vertices)).map(|e| {
+    let indices = Some(Indices::U32((1..(vertices)).map(|e| {
         vec![0 as u32, (e) as u32, (e + 1) as u32]
-    }).flatten().chain([0u32, (vertices) as u32, 1u32]).collect::<Vec<u32>>())));
+    }).flatten().chain([0u32, (vertices) as u32, 1u32]).collect::<Vec<u32>>()));
 
     mesh.set_indices(indices);
     mesh
@@ -46,7 +46,7 @@ pub fn default_ring(segments: i32, inner_radius: f32, outer_radius: f32) -> Mesh
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleStrip);
 
-    mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, (0..segments)
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, (0..segments)
         .map(|i|
             [
                 [
@@ -65,9 +65,9 @@ pub fn default_ring(segments: i32, inner_radius: f32, outer_radius: f32) -> Mesh
 
     mesh.set_indices(Some(Indices::U32((0..(segments * 2)).chain(0..2).map(|e| e as u32).collect::<Vec<u32>>())));
 
-    mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; (segments * 2) as usize]);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; (segments * 2) as usize]);
     //TODO
-    mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; (segments * 2) as usize]);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; (segments * 2) as usize]);
 
     mesh
 }
