@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use std::time::Duration;
+
+use bevy::{prelude::*, time::Stopwatch};
 
 mod player;
 mod basic_shapes;
@@ -40,7 +42,7 @@ fn check_orb(
 
     if p_trans.translation.distance(transform.translation) < 3.0 {
         let angle: f32 = rand::thread_rng().gen::<f32>() * std::f32::consts::PI * 2.0;
-        transform.translation += Vec3::new(30.0 * angle.cos(), 30.0 * angle.sin(), 0.0);
+        transform.translation += Vec3::new(40.0 * angle.cos(), 40.0 * angle.sin(), 0.0);
         player.invert = !player.invert;
     }
 }
@@ -55,7 +57,7 @@ fn setup_default_scene(
     //TODO make diagonal
     cam.transform.translation = Vec3::new( 0.0, 0.0, 80.0 );
     //TODO change up to 0 0 1
-    cam.transform.look_at(Vec3::new( 0.0, 0.0, 0.0 ), Vec3::new( 0.0, 1.0, 0.0 ));
+    cam.transform.look_at(Vec3::new( 0.0, 80.0, 0.0 ), Vec3::new( 0.0, 1.0, 0.0 ));
 
     commands.spawn(cam);
  
@@ -66,6 +68,9 @@ fn setup_default_scene(
         ..Default::default()
     });
 
+    let mut watch = Stopwatch::new();
+    watch.set_elapsed(Duration::from_secs(5));
+
     commands.spawn(PbrBundle {
         mesh: sphere,
         material: player_mat,
@@ -73,7 +78,8 @@ fn setup_default_scene(
         ..Default::default()
     })
     .insert(Player{ speed: 20.0, invert: true })
-    .insert(Classes::Teleport(TeleportClass{ distance: 10.0 }));
+    .insert(Classes::Teleport(TeleportClass{ distance: 10.0 }))
+    .insert(TeleportCooldown{ time: watch });
     //.insert(Classes::Sprint(SprintClass{ sprint_multiplier: 20.0 }));
  
     //Ground
@@ -94,12 +100,14 @@ fn setup_default_scene(
 
     for y in -10..10 {
         for x in -10..10 {
+            let x_p = x as f32 * size * std::f32::consts::FRAC_1_SQRT_2;
+            let y_p = y as f32 * size * std::f32::consts::FRAC_1_SQRT_2;
             commands.spawn(PbrBundle {
                 mesh: square.to_owned(),
                 material: if ((x + y) as i32).abs() % 2 == 1 { white_mat.to_owned() } else { black_mat.to_owned() },
                 transform: Transform {
-                    translation: Vec3::new(x as f32 * size, y as f32 * size, 0.0),
-                    rotation: Quat::from_rotation_x(std::f32::consts::FRAC_PI_2),
+                    translation: Vec3::new(x_p + y_p, x_p - y_p, 0.0),
+                    rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_4) * Quat::from_rotation_x(std::f32::consts::FRAC_PI_2),
                     scale: Vec3::new(size, size, size )},
                 ..Default::default()
             });
